@@ -25,7 +25,7 @@ import de.sub.goobi.config.ConfigPlugins;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ ConfigPlugins.class })
 @PowerMockIgnore({ "javax.management.*", "javax.net.ssl.*" })
-public class SampleOpacPluginTest {
+public class VocabularyOpacPluginTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -49,12 +49,12 @@ public class SampleOpacPluginTest {
 
     @Test
     public void testConstructor() {
-        SampleOpacPlugin plugin = new SampleOpacPlugin();
+        VocabularyOpacPlugin plugin = new VocabularyOpacPlugin();
         assertNotNull(plugin);
     }
 
     private XMLConfiguration getConfig() {
-        String file = "plugin_intranda_opac_sample.xml";
+        String file = "plugin_intranda_opac_vocabulary.xml";
         XMLConfiguration config = new XMLConfiguration();
         config.setDelimiterParsingDisabled(true);
         try {

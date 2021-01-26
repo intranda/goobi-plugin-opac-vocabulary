@@ -29,13 +29,13 @@ import ugh.fileformats.mets.MetsMods;
 
 @PluginImplementation
 @Log4j
-public class SampleOpacPlugin implements IOpacPlugin {
+public class VocabularyOpacPlugin implements IOpacPlugin {
 
     @Getter
     private PluginType type = PluginType.Opac;
 
     @Getter
-    private String title = "intranda_opac_sample";
+    private String title = "intranda_opac_vocabulary";
 
     @Getter
     private String gattung;
