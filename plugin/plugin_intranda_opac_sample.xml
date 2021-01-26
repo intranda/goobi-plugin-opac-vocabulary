@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config_plugin>
+
+	<!-- a simple sample configuration entry -->
+	<value>sample</value>
+
+	<!-- a sample list of configuration entries -->
+	<docstructs>
+		<query url="http://unapi.gbv.de/?" suffix="&amp;format=pp" />
+		<docstruct name="Book" rulesetName="Monograph"/>
+		<docstruct name="Photo" rulesetName="Picture"/>
+		<docstruct name="File" rulesetName="File"/>
+	</docstructs>
+
+	<!-- another sample list of configuration entries -->
+	<mapping>
+        <element label="collection" value="singleDigCollection"/>
+        <element label="title" value="TitleDocMain"/>
+        <element label="id" value="CatalogIDDigital"/>
+    </mapping>
+
+</config_plugin>
