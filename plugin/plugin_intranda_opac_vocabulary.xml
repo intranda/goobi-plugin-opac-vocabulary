@@ -1,22 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config_plugin>
 
-	<!-- a simple sample configuration entry -->
-	<value>sample</value>
-
-	<!-- a sample list of configuration entries -->
-	<docstructs>
-		<query url="http://unapi.gbv.de/?" suffix="&amp;format=pp" />
-		<docstruct name="Book" rulesetName="Monograph"/>
-		<docstruct name="Photo" rulesetName="Picture"/>
-		<docstruct name="File" rulesetName="File"/>
-	</docstructs>
-
-	<!-- another sample list of configuration entries -->
-	<mapping>
-        <element label="collection" value="singleDigCollection"/>
-        <element label="title" value="TitleDocMain"/>
-        <element label="id" value="CatalogIDDigital"/>
-    </mapping>
+    <config>
+       <template>HERIS</template>
+	   <defaultPublicationType>Document</defaultPublicationType>
+       
+<!-- 	   <publicationType field="Typ" /> -->
+       <metadata field="HERIS-ID" name="HerisID" />	   
+       <metadata field="Alte Objekt-ID" name="DMDBID" />
+       <metadata field="Gehört zu alter Objekt-ID" name="ParentElement" />
+       <metadata field="Katalogtitel" name="TitleDocMain" />
+       <metadata field="Typ" name="HerisType" />
+       <metadata field="Hauptkategorie grob" name="MainCategory1" />
+       <metadata field="Hauptkategorie mittel" name="MainCategory2" />
+       <metadata field="Hauptkategorie fein" name="MainCategory3" />
+       <metadata field="Gemeinden politisch (lt. Katastralgemeinden)" name="PoliticalCommunity" />
+       <metadata field="Katastralgemeinde" name="CadastralCommune" />
+       <metadata field="Bezirk" name="PoliticalDistrict" />
+       <metadata field="Bundesland" name="FederalState" />
+       <metadata field="Grundstücksnummern" name="PropertyNumber" />
+       <metadata field="Bauzeit von" name="ConstructionTimeFrom" />
+       <metadata field="Bauzeit bis" name="ConstructionTimeTo" />
+       <metadata field="Publiziert" name="Published" />
+       <metadata field="Straße" name="Street" />
+       <metadata field="Hausnummer" name="StreetNumber" />
+       <metadata field="PLZ" name="ZIPCode" />
+       <metadata field="Zusatztext aus Adresse" name="AdditionalAddressText" />
+       <metadata field="Weitere Adressen" name="OtherAddress" />
+       <metadata field="Gehört zu HERIS-ID" name="ParentElement" />
+       <metadata field="Ort" name="Community" />
+       <metadata field="Staat" name="Country" /> 
+    </config>
+    
+    <config>
+        <template>*</template>
+    
+    
+    </config>    
 
 </config_plugin>
