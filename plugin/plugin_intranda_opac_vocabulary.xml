@@ -3,9 +3,11 @@
 
     <config>
        <template>HERIS</template>
+
+	   <publicationType field="Typ" />
+
 	   <defaultPublicationType>Document</defaultPublicationType>
        
-<!-- 	   <publicationType field="Typ" /> -->
        <metadata field="HERIS-ID" name="HerisID" />	   
        <metadata field="Alte Objekt-ID" name="DMDBID" />
        <metadata field="Gehört zu alter Objekt-ID" name="ParentElement" />
@@ -31,11 +33,6 @@
        <metadata field="Ort" name="Community" />
        <metadata field="Staat" name="Country" /> 
     </config>
-    
-    <config>
-        <template>*</template>
-    
-    
-    </config>    
+      
 
 </config_plugin>
