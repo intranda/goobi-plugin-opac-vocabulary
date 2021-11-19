@@ -1,5 +1,6 @@
 package de.intranda.goobi.plugins;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.configuration.SubnodeConfiguration;
@@ -51,7 +52,9 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
     @Setter
     private String opacName;
 
-
+    @Setter
+    @Getter
+    private String workflowTitle;
 
     /**
      * method to request the source system to request metadata from there and to return a Fileformat as result with mapped metadata
@@ -154,13 +157,37 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
         XMLConfiguration xmlConfig = ConfigPlugins.getPluginConfig(title);
         xmlConfig.setExpressionEngine(new XPathExpressionEngine());
         SubnodeConfiguration myconfig = null;
-        try {
-            myconfig = xmlConfig.configurationAt("//config[./template='" + templateName + "']");
-        } catch (IllegalArgumentException e) {
-            myconfig = xmlConfig.configurationAt("//config[./template='*']");
+        if (StringUtils.isNotBlank(workflowTitle)) {
+            try {
+                myconfig = xmlConfig.configurationAt("//config[./workflow='" + workflowTitle + "'][./template='" + templateName + "']");
+            } catch (IllegalArgumentException e) {
+            }
+            if (myconfig == null) {
+                try {
+                    myconfig = xmlConfig.configurationAt("//config[./workflow='" + workflowTitle + "']");
+                } catch (IllegalArgumentException e) {
+                }
+            }
+        }
+        if (myconfig == null) {
+            try {
+                myconfig = xmlConfig.configurationAt("//config[./template='" + templateName + "']");
+            } catch (IllegalArgumentException e) {
+                myconfig = xmlConfig.configurationAt("//config[./template='*']");
+            }
         }
         VocabularyConfig config = new VocabularyConfig(myconfig);
         return config;
+    }
+
+    @Override
+    public List<ConfigOpacCatalogue> getOpacConfiguration(String workflowName, String title) {
+        List<ConfigOpacCatalogue> answer = new ArrayList<>();
+        this.workflowTitle = workflowName;
+        ConfigOpacCatalogue coc = ConfigOpac.getInstance().getCatalogueByName(title);
+        coc.setOpacPlugin(this);
+        answer.add(coc);
+        return answer;
     }
 
 }

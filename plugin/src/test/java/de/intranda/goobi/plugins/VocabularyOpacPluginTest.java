@@ -24,7 +24,7 @@ import de.sub.goobi.config.ConfigPlugins;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ ConfigPlugins.class })
-@PowerMockIgnore({ "javax.management.*", "javax.net.ssl.*" })
+@PowerMockIgnore({ "javax.management.*", "javax.net.ssl.*", "jdk.internal.reflect.*" })
 public class VocabularyOpacPluginTest {
 
     @Rule

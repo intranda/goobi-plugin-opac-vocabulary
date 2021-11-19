@@ -2,6 +2,7 @@
 <config_plugin>
 
     <config>
+       <workflow>Heris-Import</workflow>
        <template>HERIS</template>
 
 	   <publicationType field="Typ" />
