@@ -75,7 +75,7 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
             config = getConfig(database);
         }
 
-        List<VocabRecord> results = VocabularyManager.findRecords(database, term, field);
+        List<VocabRecord> results = VocabularyManager.findExactRecords(database, term, field);
 
         if (results.isEmpty()) {
             // no records found
