@@ -13,7 +13,7 @@ import io.goobi.vocabulary.exchange.Vocabulary;
 import io.goobi.vocabulary.exchange.VocabularySchema;
 import io.goobi.vocabulary.exchange.FieldDefinition;
 import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
-import io.goobi.workflow.api.vocabulary.jsfwrapper.JSFVocabularyRecord;
+import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabularyRecord;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
@@ -98,8 +98,10 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
         }
 
         // Currently, no exact search is possible. Therefore, filter the result for exact results
-        Optional<JSFVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords()
-                .search(vocabulary.getId(), searchField.get().getId() + ":" + term)
+        Optional<ExtendedVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords()
+                .list(vocabulary.getId())
+                .search(searchField.get().getId() + ":" + term)
+                .request()
                 .getContent()
                 .stream()
                 .filter(r -> r.getFields().stream()
@@ -116,7 +118,7 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
         }
 
         hitcount = 1;
-        JSFVocabularyRecord rec = recordList.get();
+        ExtendedVocabularyRecord rec = recordList.get();
 
         Set<FieldInstance> fields = rec.getFields();
         String docStructType = config.getDefaultPublicationType();
