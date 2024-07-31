@@ -42,6 +42,9 @@ public class VocabularyOpacPluginTest {
             resourcesFolder = "target/test-classes/"; // to run mvn test from cli or in jenkins
         }
 
+        String log4jFile = resourcesFolder + "log4j2.xml"; // for junit tests in eclipse
+        System.setProperty("log4j.configurationFile", log4jFile);
+
         PowerMock.mockStatic(ConfigPlugins.class);
         EasyMock.expect(ConfigPlugins.getPluginConfig(EasyMock.anyString())).andReturn(getConfig()).anyTimes();
         PowerMock.replay(ConfigPlugins.class);
