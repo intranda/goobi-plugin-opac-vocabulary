@@ -11,6 +11,7 @@ import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.reloading.FileChangedReloadingStrategy;
 import org.easymock.EasyMock;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -21,33 +22,43 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.config.ConfigurationHelper;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ ConfigPlugins.class })
+@PrepareForTest({ ConfigPlugins.class, ConfigurationHelper.class })
 @PowerMockIgnore({ "javax.management.*", "javax.net.ssl.*", "jdk.internal.reflect.*" })
 public class VocabularyOpacPluginTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
     private File tempFolder;
-    private String resourcesFolder;
+    private static String resourcesFolder;
+
+    @BeforeClass
+    public static void setUpClass() {
+        resourcesFolder = "src/test/resources/"; // for junit tests in eclipse
+        if (!Files.exists(Paths.get(resourcesFolder))) {
+            resourcesFolder = "target/test-classes/"; // to run mvn test from cli or in jenkins
+        }
+        String log4jFile = resourcesFolder + "log4j2.xml"; // for junit tests in eclipse
+        System.setProperty("log4j.configurationFile", log4jFile);
+    }
 
     @Before
     public void setUp() throws Exception {
         tempFolder = folder.newFolder("tmp");
 
-        resourcesFolder = "src/test/resources/"; // for junit tests in eclipse
-
-        if (!Files.exists(Paths.get(resourcesFolder))) {
-            resourcesFolder = "target/test-classes/"; // to run mvn test from cli or in jenkins
-        }
-
-        String log4jFile = resourcesFolder + "log4j2.xml"; // for junit tests in eclipse
-        System.setProperty("log4j.configurationFile", log4jFile);
-
         PowerMock.mockStatic(ConfigPlugins.class);
         EasyMock.expect(ConfigPlugins.getPluginConfig(EasyMock.anyString())).andReturn(getConfig()).anyTimes();
-        PowerMock.replay(ConfigPlugins.class);
+
+        PowerMock.mockStatic(ConfigurationHelper.class);
+        ConfigurationHelper configurationHelper = EasyMock.createMock(ConfigurationHelper.class);
+        EasyMock.expect(configurationHelper.getVocabularyServerHost()).andReturn("").anyTimes();
+        EasyMock.expect(configurationHelper.getVocabularyServerPort()).andReturn(80).anyTimes();
+
+        EasyMock.expect(ConfigurationHelper.getInstance()).andReturn(configurationHelper).anyTimes();
+        PowerMock.replay(ConfigPlugins.class, ConfigurationHelper.class);
+        EasyMock.replay(configurationHelper);
     }
 
     @Test
