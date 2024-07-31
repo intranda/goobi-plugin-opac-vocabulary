@@ -2,7 +2,18 @@ package de.intranda.goobi.plugins;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import de.sub.goobi.helper.Helper;
+import io.goobi.vocabulary.exchange.FieldInstance;
+import io.goobi.vocabulary.exchange.TranslationInstance;
+import io.goobi.vocabulary.exchange.Vocabulary;
+import io.goobi.vocabulary.exchange.VocabularySchema;
+import io.goobi.vocabulary.exchange.FieldDefinition;
+import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
+import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabularyRecord;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
@@ -10,11 +21,8 @@ import org.apache.commons.lang.StringUtils;
 import org.goobi.production.cli.helper.StringPair;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IOpacPlugin;
-import org.goobi.vocabulary.Field;
-import org.goobi.vocabulary.VocabRecord;
 
 import de.sub.goobi.config.ConfigPlugins;
-import de.sub.goobi.persistence.managers.VocabularyManager;
 import de.unigoettingen.sub.search.opac.ConfigOpac;
 import de.unigoettingen.sub.search.opac.ConfigOpacCatalogue;
 import de.unigoettingen.sub.search.opac.ConfigOpacDoctype;
@@ -56,6 +64,8 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
     @Getter
     private String workflowTitle;
 
+    private VocabularyAPIManager vocabularyAPI = VocabularyAPIManager.getInstance();
+
     /**
      * method to request the source system to request metadata from there and to return a Fileformat as result with mapped metadata
      * 
@@ -75,24 +85,54 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
             config = getConfig(database);
         }
 
-        List<VocabRecord> results = VocabularyManager.findExactRecords(database, term, field);
+        Vocabulary vocabulary = vocabularyAPI.vocabularies().findByName(database);
 
-        if (results.isEmpty()) {
+        VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
+        Optional<FieldDefinition> searchField = schema.getDefinitions().stream()
+                .filter(d -> d.getName().equals(field))
+                .findFirst();
+
+        if (searchField.isEmpty()) {
+            Helper.setFehlerMeldung("Field " + field + " not found in vocabulary " + vocabulary.getName());
+            return null;
+        }
+
+        // Currently, no exact search is possible. Therefore, filter the result for exact results
+        Optional<ExtendedVocabularyRecord> recordList = vocabularyAPI.vocabularyRecords()
+                .list(vocabulary.getId())
+                .search(searchField.get().getId() + ":" + term)
+                .request()
+                .getContent()
+                .stream()
+                .filter(r -> r.getFields().stream()
+                        .flatMap(f -> f.getValues().stream())
+                        .flatMap(v -> v.getTranslations().stream())
+                        .map(TranslationInstance::getValue)
+                        .anyMatch(v -> v.equals(term)))
+                .findFirst();
+
+        if (recordList.isEmpty()) {
             // no records found
             hitcount = 0;
             return null;
         }
-        hitcount = 1;
-        VocabRecord rec = results.get(0);
 
-        List<Field> fields = rec.getFields();
+        hitcount = 1;
+        ExtendedVocabularyRecord rec = recordList.get();
+
+        Set<FieldInstance> fields = rec.getFields();
         String docStructType = config.getDefaultPublicationType();
-        if (StringUtils.isNotBlank(config.getPublicationTypeField())) {
-            for (Field f : fields) {
-                if (f.getDefinition().getLabel().equals(config.getPublicationTypeField())) {
-                    docStructType = f.getValue();
-                }
-            }
+        Optional<Long> publicationTypeFieldId = schema.getDefinitions().stream()
+                .filter(d -> d.getName().equals(config.getPublicationTypeField()))
+                .map(FieldDefinition::getId)
+                .findFirst();
+        if (publicationTypeFieldId.isPresent()) {
+            docStructType = fields.stream()
+                    .filter(f -> f.getDefinitionId().equals(publicationTypeFieldId.get()))
+                    .flatMap(f -> f.getValues().stream())
+                    .flatMap(v -> v.getTranslations().stream())
+                    .map(TranslationInstance::getValue)
+                    .collect(Collectors.joining(" "));
         }
 
         // create a FileFormat
@@ -101,6 +141,7 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
         mm.setDigitalDocument(digitalDocument);
         DocStruct item = digitalDocument.createDocStruct(prefs.getDocStrctTypeByName(docStructType));
         digitalDocument.setLogicalDocStruct(item);
+        // TODO: Check why item.getType() could be null
         gattung = item.getType().getName();
         DocStruct physical = digitalDocument.createDocStruct(prefs.getDocStrctTypeByName("BoundBook"));
         digitalDocument.setPhysicalDocStruct(physical);
@@ -114,23 +155,28 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
         item.addMetadata(mdID);
 
         for (StringPair sp : config.getMetadataMapping()) {
-            for (Field f : fields) {
-                if (f.getDefinition().getLabel().equals(sp.getTwo())) {
-                    if (StringUtils.isNotBlank(f.getValue())) {
-                        try {
-                            Metadata md = new Metadata(prefs.getMetadataTypeByName(sp.getOne()));
-                            md.setValue(f.getValue());
-                            item.addMetadata(md);
-                        } catch (Exception e) {
-                            log.error(e);
-                        }
-                    }
-
-                    break;
+            Optional<Long> fieldId = schema.getDefinitions().stream()
+                    .filter(d -> d.getName().equals(sp.getTwo()))
+                    .map(FieldDefinition::getId)
+                    .findFirst();
+            if (fieldId.isPresent()) {
+                String value = fields.stream()
+                        .filter(f -> f.getDefinitionId().equals(fieldId.get()))
+                        .flatMap(f -> f.getValues().stream())
+                        .flatMap(v -> v.getTranslations().stream())
+                        .map(TranslationInstance::getValue)
+                        .collect(Collectors.joining(" "));
+                if (value.isBlank()) {
+                    continue;
                 }
-
+                try {
+                    Metadata md = new Metadata(prefs.getMetadataTypeByName(sp.getOne()));
+                    md.setValue(value);
+                    item.addMetadata(md);
+                } catch (Exception e) {
+                    log.error(e);
+                }
             }
-
         }
 
         return mm;
