@@ -53,8 +53,7 @@ public class VocabularyOpacPluginTest {
 
         PowerMock.mockStatic(ConfigurationHelper.class);
         ConfigurationHelper configurationHelper = EasyMock.createMock(ConfigurationHelper.class);
-        EasyMock.expect(configurationHelper.getVocabularyServerHost()).andReturn("").anyTimes();
-        EasyMock.expect(configurationHelper.getVocabularyServerPort()).andReturn(80).anyTimes();
+        EasyMock.expect(configurationHelper.getVocabularyServerAddress()).andReturn("").anyTimes();
 
         EasyMock.expect(ConfigurationHelper.getInstance()).andReturn(configurationHelper).anyTimes();
         PowerMock.replay(ConfigPlugins.class, ConfigurationHelper.class);
