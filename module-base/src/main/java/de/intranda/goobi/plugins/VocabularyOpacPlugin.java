@@ -6,14 +6,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import de.sub.goobi.helper.Helper;
-import io.goobi.vocabulary.exchange.FieldInstance;
-import io.goobi.vocabulary.exchange.TranslationInstance;
-import io.goobi.vocabulary.exchange.Vocabulary;
-import io.goobi.vocabulary.exchange.VocabularySchema;
-import io.goobi.vocabulary.exchange.FieldDefinition;
-import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
-import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabularyRecord;
 import org.apache.commons.configuration.SubnodeConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.commons.configuration.tree.xpath.XPathExpressionEngine;
@@ -23,9 +15,17 @@ import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IOpacPlugin;
 
 import de.sub.goobi.config.ConfigPlugins;
+import de.sub.goobi.helper.Helper;
 import de.unigoettingen.sub.search.opac.ConfigOpac;
 import de.unigoettingen.sub.search.opac.ConfigOpacCatalogue;
 import de.unigoettingen.sub.search.opac.ConfigOpacDoctype;
+import io.goobi.vocabulary.exchange.FieldDefinition;
+import io.goobi.vocabulary.exchange.FieldInstance;
+import io.goobi.vocabulary.exchange.TranslationInstance;
+import io.goobi.vocabulary.exchange.Vocabulary;
+import io.goobi.vocabulary.exchange.VocabularySchema;
+import io.goobi.workflow.api.vocabulary.VocabularyAPIManager;
+import io.goobi.workflow.api.vocabulary.helper.ExtendedVocabularyRecord;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j;
@@ -88,7 +88,8 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
         Vocabulary vocabulary = vocabularyAPI.vocabularies().findByName(database);
 
         VocabularySchema schema = vocabularyAPI.vocabularySchemas().get(vocabulary.getSchemaId());
-        Optional<FieldDefinition> searchField = schema.getDefinitions().stream()
+        Optional<FieldDefinition> searchField = schema.getDefinitions()
+                .stream()
                 .filter(d -> d.getName().equals(field))
                 .findFirst();
 
@@ -104,7 +105,8 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
                 .request()
                 .getContent()
                 .stream()
-                .filter(r -> r.getFields().stream()
+                .filter(r -> r.getFields()
+                        .stream()
                         .flatMap(f -> f.getValues().stream())
                         .flatMap(v -> v.getTranslations().stream())
                         .map(TranslationInstance::getValue)
@@ -122,7 +124,8 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
 
         Set<FieldInstance> fields = rec.getFields();
         String docStructType = config.getDefaultPublicationType();
-        Optional<Long> publicationTypeFieldId = schema.getDefinitions().stream()
+        Optional<Long> publicationTypeFieldId = schema.getDefinitions()
+                .stream()
                 .filter(d -> d.getName().equals(config.getPublicationTypeField()))
                 .map(FieldDefinition::getId)
                 .findFirst();
@@ -150,12 +153,14 @@ public class VocabularyOpacPlugin implements IOpacPlugin {
         pathimagefiles.setValue("/images");
         physical.addMetadata(pathimagefiles);
 
-        Metadata mdID = new Metadata(prefs.getMetadataTypeByName("CatalogIDDigital"));
-        mdID.setValue(String.valueOf(rec.getId()));
-        item.addMetadata(mdID);
-
+        if (config.isCreateIdentifierField()) {
+            Metadata mdID = new Metadata(prefs.getMetadataTypeByName("CatalogIDDigital"));
+            mdID.setValue(String.valueOf(rec.getId()));
+            item.addMetadata(mdID);
+        }
         for (StringPair sp : config.getMetadataMapping()) {
-            Optional<Long> fieldId = schema.getDefinitions().stream()
+            Optional<Long> fieldId = schema.getDefinitions()
+                    .stream()
                     .filter(d -> d.getName().equals(sp.getTwo()))
                     .map(FieldDefinition::getId)
                     .findFirst();

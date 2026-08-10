@@ -9,6 +9,9 @@
 
 	   <defaultPublicationType>Document</defaultPublicationType>
        
+       <!-- generate the identifier field with the vocabulary record id as the value -->
+       <createIdentifierField>true</createIdentifierField>
+       
        <metadata field="HERIS-ID" name="HerisID" />	   
        <metadata field="Alte Objekt-ID" name="DMDBID" />
        <metadata field="Gehört zu alter Objekt-ID" name="ParentElement" />

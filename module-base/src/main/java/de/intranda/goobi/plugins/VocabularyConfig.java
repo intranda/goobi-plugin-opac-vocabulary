@@ -21,6 +21,8 @@ public class VocabularyConfig {
     // metadata name / record field name
     private List<StringPair> metadataMapping = new ArrayList<>();
 
+    private boolean createIdentifierField;
+
     /**
      * loads the &lt;config&gt; block from xml file
      * 
@@ -32,6 +34,7 @@ public class VocabularyConfig {
         defaultPublicationType = xmlConfig.getString("/defaultPublicationType", null);
 
         publicationTypeField = xmlConfig.getString("/publicationType/@field", null);
+        createIdentifierField = xmlConfig.getBoolean("/createIdentifierField", true);
 
         List<HierarchicalConfiguration> metadataConfiguration = xmlConfig.configurationsAt("/metadata");
         for (HierarchicalConfiguration mc : metadataConfiguration) {
